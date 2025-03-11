@@ -14,7 +14,7 @@ with st.sidebar:
         api_base = st.text_input("Base Url", key="chatbot_api_base", type="default", 
                                  placeholder="https://api.deepseek.com/v1")  
         api_key = st.text_input("API Key", key="chatbot_api_key", type="password", 
-                                placeholder="sk-9ee206fef1134798a880a7e328c77dd7")  
+                                placeholder="-")  
         model = st.text_input("Model",key="chatbot_model", type="default",
                               placeholder="deepseek-reasoner")
         "[获取 DeepSeek API key](https://platform.deepseek.com/api_keys)"  

@@ -17,7 +17,7 @@ async def get_model_response(prompt: str) -> AsyncGenerator[str, None]:
     """
     # 初始化模型
     model = ChatOpenAI(
-        api_key="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",
+        api_key="-",
         base_url="https://openrouter.ai/api/v1/",
         model_name="deepseek/deepseek-r1:free",
         streaming=True

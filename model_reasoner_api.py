@@ -17,7 +17,7 @@ def get_reasoner_response(prompt: str, model:str, api_base:str, api_key:str) -> 
     
     # 初始化 Anthropic 客户端
     client = OpenAI(
-        # api_key="sk-bd275892d2b54b37af139d417c3a4abd",
+        # api_key="-",
         # base_url="https://dashscope.aliyuncs.com/compatible-mode/v1/"
         base_url=api_base,
         api_key=api_key
