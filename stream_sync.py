@@ -1,56 +1,32 @@
 import streamlit as st
 from model_reasoner_api import get_reasoner_response
 import time
-import re
+# import asyncio
 
 st.set_page_config(page_title="ICH Copilot with Reasoning", page_icon="🦜")
-st.title("🧠 ICH Copilot with Reasoning 🔍✅📝📄")
+st.title("🦜 ICH Copilot with Reasoning")
+
+# 在侧边栏添加配置选项  
+with st.sidebar:  
+    with st.expander("LLM模型API设置", expanded=False):
+        # 提供一个文本输入框让用户可以手动输入API Key（可选）  
+        st.markdown('<span style="font-size: 14px;">内置deepseek模型为免费模型，如果存在卡顿或者超时问题，建议接入自己的Deepseek API</span>', unsafe_allow_html=True)
+        api_base = st.text_input("Base Url", key="chatbot_api_base", type="default", 
+                                 placeholder="https://api.deepseek.com/v1")  
+        api_key = st.text_input("API Key", key="chatbot_api_key", type="password", 
+                                placeholder="sk-9ee206fef1134798a880a7e328c77dd7")  
+        model = st.text_input("Model",key="chatbot_model", type="default",
+                              placeholder="deepseek-reasoner")
+        "[获取 DeepSeek API key](https://platform.deepseek.com/api_keys)"  
 
 def init_session_state():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-def format_response(response: str):
-    """将响应文本分割成思考过程和最终答案"""
-    think_pattern = r'<think_start>(.*?)<think_end>'
-    think_parts = re.findall(think_pattern, response, re.DOTALL)
-    final_response = re.sub(think_pattern, '', response).strip()
-    return think_parts, final_response
-
-def stream_display(placeholder, response, thinking_placeholder=None):
-    """处理流式输出的显示"""
-    think_parts, final_response = format_response(response)
-    
-    # 更新思考过程
-    if think_parts and thinking_placeholder is not None:
-        think_text = ""
-        for i, think in enumerate(think_parts, 1):
-            think_text += f"**思考步骤 {i}:**\n{think.strip()}\n\n"
-        thinking_placeholder.markdown(think_text)
-    
-    # 更新最终答案
-    if final_response:
-        placeholder.markdown(final_response + "▌ ")
-
-def display_message(message):
-    """显示历史消息"""
-    think_parts, final_response = format_response(message)
-    
-    # 如果有思考过程，显示在可折叠区域
-    if think_parts:
-        with st.expander("💭 查看思考过程", expanded=False):
-            for i, think in enumerate(think_parts, 1):
-                st.markdown(f"**思考步骤 {i}:**")
-                st.markdown(think.strip())
-    
-    # 显示最终答案
-    if final_response:
-        st.markdown(final_response)
-
 def display_chat_history():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            display_message(message["content"])
+            st.markdown(message["content"])
 
 def main():    
     init_session_state()
@@ -62,25 +38,44 @@ def main():
             st.markdown(prompt)
             
         with st.chat_message("assistant"):
-            # 创建两个占位符：一个用于思考过程，一个用于最终答案
-            thinking_placeholder = st.empty()
-            answer_placeholder = st.empty()
-            
-            full_response = ""
-            
-            # 流式输出处理
-            for chunk in get_reasoner_response(prompt):
-                full_response += chunk
-                stream_display(answer_placeholder, full_response, thinking_placeholder)
+            # 创建一个expander显示思考过程，reason_container用来放置思考过程的文本
+            with st.expander("思考中...", expanded=True):
+                reason_container = st.empty()
+            answer_container = st.empty()
+
+            answer_content = ""
+            reasoning_content = ""
+            stream_phase = "notstart"
+            print("model: ", model)
+            print("api_base: ", api_base)
+            print("api_key: ", api_key)
+            for chunk in get_reasoner_response(prompt,model, api_base, api_key):
+                chunk_cleaned  = chunk\
+                    .replace("<think_start>", "")\
+                    .replace("<think_end>", "")
+                
+                if(chunk.find("<think_start>") != -1):
+                    stream_phase = "thinking"
+                    continue
+
+                if(chunk.find("<think_end>") != -1):
+                    stream_phase = "answering"
+                    continue
+
+                if stream_phase == "thinking":
+                    reasoning_content += chunk_cleaned
+                    with st.expander("思考中...", expanded=True):
+                        reason_container.markdown(reasoning_content+"▌")
+
+                if stream_phase == "answering":
+                    answer_content += chunk_cleaned
+                    answer_container.markdown(answer_content+"▌")
                 time.sleep(0.05)
+            answer_container.markdown(answer_content)
+
             
-            # 清理流式输出的痕迹，重新显示完整响应
-            thinking_placeholder.empty()
-            answer_placeholder.empty()
-            display_message(full_response)
-            
-        if full_response:
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+        if answer_content != "":  # 只在成功获得响应时添加到历史记录
+            st.session_state.messages.append({"role": "assistant", "content": answer_content})
 
 if __name__ == "__main__":
     main()
