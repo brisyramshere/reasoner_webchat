@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 
 import streamlit as st
 
-st.set_page_config(page_title="ICH Copilot: Chat with search", page_icon="🦜")
+st.set_page_config(page_title="ICH Copilot", page_icon="🦜")
 st.title("🦜 ICH Copilot")
 
 openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")

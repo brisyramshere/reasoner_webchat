@@ -1,6 +1,11 @@
 import streamlit as st
-from model_api import get_model_response
+# from model_api import get_model_response
+from model_reasoner_api import get_reasoner_response
+from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 import asyncio
+
+st.set_page_config(page_title="ICH Copilot", page_icon="🦜")
+st.title("🦜 ICH Copilot")
 
 def init_session_state():
     if "messages" not in st.session_state:
@@ -11,9 +16,7 @@ def display_chat_history():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-async def main():
-    st.title("Chat with AI")
-    
+async def main():    
     init_session_state()
     display_chat_history()
     
@@ -25,7 +28,7 @@ async def main():
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             full_response = ""
-            async for chunk in get_model_response(prompt):
+            async for chunk in get_reasoner_response(prompt):
                 full_response += chunk
                 # 使用空格确保 Markdown 正确渲染
                 message_placeholder.markdown(full_response + "▌ ")
