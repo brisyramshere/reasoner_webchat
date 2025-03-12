@@ -1,4 +1,4 @@
-# ICH Copilot with Reasoning 🦜
+# Chatbot with Reasoning 🦜
 
 一个基于 Streamlit 构建的智能对话系统，具有思考推理能力的AI助手。
 
@@ -8,6 +8,7 @@
 - 🔄 流式响应，实时显示内容
 - 💾 保存对话历史记录
 - ⚙️ 支持自定义模型配置
+- 💬 pubmed搜索工具
 
 ## 使用方法
 
